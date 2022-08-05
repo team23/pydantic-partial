@@ -1,2 +1,8 @@
 /poetry.lock
 /dist/*
+/.coverage
+
+__pycache__
+*.pyc
+*.pyo
+

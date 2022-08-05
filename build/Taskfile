@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# b5 Taskfile, see https://git.team23.de/build/b5 for details
+
+task:install() {
+    cd .. && \
+    poetry install
+}
+
+task:update() {
+    task:install
+}
+
+task:test() {
+    cd .. && \
+    poetry run pytest --cov=pydantic_partial --cov-report term-missing:skip-covered
+}
+
+task:isort() {
+    cd .. && \
+    poetry run isort pydantic_partial tests
+}
+
+task:lint() {
+    cd .. && \
+    poetry run flake8 pydantic_partial tests
+}
