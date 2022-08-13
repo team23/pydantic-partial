@@ -9,6 +9,7 @@ from pydantic_partial import PartialModelMixin
 class Something(PartialModelMixin, pydantic.BaseModel):
     name: str = pydantic.Field(..., alias="test_name", title="TEST Name", something_else=True)
     age: int
+    already_optional: None = None
 
     class Config:
         allow_population_by_field_name = True
@@ -118,3 +119,9 @@ def test_partial_allows_explicit_recursive():
     assert SomethingListPartial.__fields__["items"].type_.__fields__["age"].required is True
     SomethingListPartial(items=[])
     SomethingListPartial(items=[{"age": 1}])
+
+
+def test_no_change_to_optional_fields():
+    SomethingPartial = Something.as_partial("already_optional")
+
+    assert SomethingPartial is Something
