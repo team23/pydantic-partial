@@ -10,17 +10,30 @@ task:update() {
     task:install
 }
 
+task:poetry() {
+    (
+        cd .. && \
+        poetry "$@"
+    )
+}
+
 task:test() {
-    cd .. && \
-    poetry run pytest --cov=pydantic_partial --cov-report term-missing:skip-covered
+    task:poetry run pytest --cov=pydantic_partial --cov-report term-missing:skip-covered
 }
 
 task:isort() {
-    cd .. && \
-    poetry run isort pydantic_partial tests
+    task:poetry run isort pydantic_partial tests
+}
+
+task:flake8() {
+    task:poetry run flake8 pydantic_partial tests
+}
+
+task:mypy() {
+    task:poetry run mypy pydantic_partial
 }
 
 task:lint() {
-    cd .. && \
-    poetry run flake8 pydantic_partial tests
+    task:flake8
+    task:mypy
 }
