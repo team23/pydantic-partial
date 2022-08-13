@@ -1,9 +1,10 @@
-from typing import Any
+from typing import Any, no_type_check
 
 import pydantic
 from pydantic.fields import FieldInfo
 
 
+@no_type_check
 def copy_field_info(field_info: FieldInfo, **overrides: Any) -> FieldInfo:
     """
     Return a copy of a pydantic FieldInfo object, allow to override

@@ -25,7 +25,7 @@ FullSomethingPartial(name=None, age=None)
 """
 
 import functools
-from typing import Dict, List, Optional, Type, TypeVar, Union, get_args, get_origin
+from typing import Dict, List, Optional, Type, TypeVar, Union, get_args, get_origin, Any
 
 import pydantic
 
@@ -57,7 +57,7 @@ class PartialModelMixin(pydantic.BaseModel):
                 children_fields = [
                     field.removeprefix(field_prefix)
                     for field
-                    in fields
+                    in fields_
                     if field.startswith(field_prefix)
                 ]
                 if children_fields == ["*"]:
@@ -66,12 +66,14 @@ class PartialModelMixin(pydantic.BaseModel):
             else:
                 return field_type_
 
-        # By default make all fields optional
-        if not fields:
-            fields = list(cls.__fields__.keys())
+        # By default make all fields optional, but use passed fields when possible
+        if fields:
+            fields_ = list(fields)
+        else:
+            fields_ = list(cls.__fields__.keys())
 
         # Construct list of optional new field overrides
-        optional_fields = {}
+        optional_fields: dict[str, Any] = {}
         for field_name in cls.__fields__.keys():
             field_type = cls.__fields__[field_name].outer_type_
             if field_type is None:
@@ -81,11 +83,11 @@ class PartialModelMixin(pydantic.BaseModel):
             has_sub_fields = any(
                 field.startswith(f"{field_name}.")
                 for field
-                in fields
+                in fields_
             )
 
             # Continue if this field needs not to be handled
-            if field_name not in fields and not has_sub_fields:
+            if field_name not in fields_ and not has_sub_fields:
                 continue
 
             # Change type for sub models, if requested
@@ -103,7 +105,7 @@ class PartialModelMixin(pydantic.BaseModel):
                     field_type = _partial_type(field_name, field_type)
 
             # Construct new field definition
-            if field_name in fields:
+            if field_name in fields_:
                 if (
                     cls.__fields__[field_name].required
                     or cls.__fields__[field_name].default is not None
