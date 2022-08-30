@@ -105,3 +105,10 @@ converted to partial models.
 **Also note:** My recommendation would be to always create such recursive
 partials by creating partials for all the required models and then override
 the fields on you outer partial model class. This is way more explicit.
+
+# Contributing
+
+If you want to contribute to this project, feel free to just fork the project,
+create a dev branch in your fork and then create a pull request (PR). If you
+are unsure about whether your changes really suit the project please create an
+issue first, to talk about this.
