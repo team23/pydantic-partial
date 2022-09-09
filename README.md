@@ -1,4 +1,10 @@
-# `pydantic-partial`
+# pydantic-partial
+
+## Installation
+
+Just use `pip install pydantic-partial` to install the library.
+
+## About
 
 Create partial models from your normal pydantic models. Partial models will allow
 some or all fields to be optional and thus not be required when creating the model
@@ -14,7 +20,7 @@ pydantic with for example FastAPI.
 **Disclaimer:** This is still an early release of `pydantic-partial`. Things might
 change in the future. PR welcome. ;-)
 
-# Usage example
+### Usage example
 
 `pydantic-partial` provides a mixin to generate partial model classes. The mixin can
 be used like this:
@@ -34,7 +40,7 @@ FullSomethingPartial = Something.as_partial()
 FullSomethingPartial(name=None, age=None)
 ```
 
-## Without using the mixin mixin
+### Without using the mixin mixin
 
 You also may create partial models without using the mixin:
 
@@ -53,7 +59,7 @@ FullSomethingPartial = create_partial_model(Something)
 FullSomethingPartial(name=None, age=None)
 ```
 
-## Only changing some fields to being optional
+### Only changing some fields to being optional
 
 `pydantic-partial` can be used to create partial models that only change some
 of the fields to being optional. Just pass the list of fields to be optional to
@@ -73,7 +79,7 @@ FullSomethingPartial(name=None)
 # This would still raise an error: FullSomethingPartial(age=None)
 ```
 
-## Recursive partials
+### Recursive partials
 
 Partial models can be created changing the field of all nested models to being
 optional, too.
