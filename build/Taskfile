@@ -1,13 +1,26 @@
 #!/usr/bin/env bash
 # b5 Taskfile, see https://git.team23.de/build/b5 for details
 
+pre-commit:install() {
+    if ( which pre-commit > /dev/null 2>&1 )
+    then
+        pre-commit install --install-hooks
+    else
+        b5:warn "-----------------------------------------------------------------"
+        b5:warn "pre-commit is not installed - cannot enable pre-commit hooks!"
+        b5:warn "Recommendation: Install pre-commit ('brew install pre-commit')."
+        b5:warn "-----------------------------------------------------------------"
+    fi
+}
+
 task:install() {
-    cd .. && \
-    poetry install
+    task:poetry install
+
+    pre-commit:install
 }
 
 task:update() {
-    task:install
+    task:poetry install
 }
 
 task:poetry() {
