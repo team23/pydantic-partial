@@ -1,0 +1,21 @@
+name: "TEST: Run pytest using tox"
+on: [push, pull_request]
+jobs:
+  tox-pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade poetry
+          poetry install
+      - name: Test with pytest
+        run: |
+          poetry run tox -e 'py-{1.9,1.10}'
