@@ -21,6 +21,10 @@ task:test() {
     task:poetry run pytest --cov=pydantic_partial --cov-report term-missing:skip-covered
 }
 
+task:test:all() {
+    task:poetry run tox
+}
+
 task:isort() {
     task:poetry run isort pydantic_partial tests
 }
