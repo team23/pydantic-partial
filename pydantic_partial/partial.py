@@ -75,8 +75,8 @@ def create_partial_model(
         # Do we have any fields starting with $FIELD_NAME + "."?
         has_sub_fields = any(
             field.startswith(f"{field_name}.")
-                for field
-                in fields_
+            for field
+            in fields_
         )
 
         # Continue if this field needs not to be handled
@@ -90,8 +90,8 @@ def create_partial_model(
                 field_type = field_type_origin[
                     tuple(
                         _partial_type(field_name, field_args_type)
-                            for field_args_type
-                            in get_args(field_type)
+                        for field_args_type
+                        in get_args(field_type)
                     )
                 ]
             else:
@@ -100,8 +100,8 @@ def create_partial_model(
         # Construct new field definition
         if field_name in fields_:
             if (
-                    base_cls.__fields__[field_name].required
-                    or base_cls.__fields__[field_name].default is not None
+                base_cls.__fields__[field_name].required
+                or base_cls.__fields__[field_name].default is not None
             ):
                 optional_fields[field_name] = (
                     Optional[field_type],

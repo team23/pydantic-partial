@@ -1,6 +1,6 @@
 import pydantic
 
-from pydantic_partial import create_partial_model, PartialModelMixin
+from pydantic_partial import PartialModelMixin, create_partial_model
 
 
 class Something(pydantic.BaseModel):
