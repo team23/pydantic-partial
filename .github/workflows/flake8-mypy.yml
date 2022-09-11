@@ -1,7 +1,7 @@
 name: "LINT: Run flake8 & mypy"
 on: [push, pull_request]
 jobs:
-  tox-pytest:
+  flake8-and-mypy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
