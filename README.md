@@ -10,9 +10,9 @@ Create partial models from your normal pydantic models. Partial models will allo
 some or all fields to be optional and thus not be required when creating the model
 instance.
 
-Partial models can be used to support PATCH HTTP requests where the suer only wants
+Partial models can be used to support PATCH HTTP requests where the user only wants
 to update some fields of the model and normal validation for required fields is not
-required. It may also be used to have partial response DTO's where you want to skip
+required. It may also be used to have partial response DTOs where you want to skip
 certain fields, this can be useful in combination with `exclude_none`. It is - like
 shown in these examples - intended to be used with API use cases, so when using
 pydantic with for example FastAPI.
@@ -29,7 +29,7 @@ be used like this:
 import pydantic
 from pydantic_partial import PartialModelMixin
 
-# Something model, than can be used as a partial, too:
+# Something model, then can be used as a partial, too:
 class Something(PartialModelMixin, pydantic.BaseModel):
     name: str
     age: int
@@ -40,7 +40,7 @@ FullSomethingPartial = Something.as_partial()
 FullSomethingPartial(name=None, age=None)
 ```
 
-### Without using the mixin mixin
+### Without using the mixin
 
 You also may create partial models without using the mixin:
 
