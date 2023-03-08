@@ -18,4 +18,4 @@ jobs:
           poetry install
       - name: Test with pytest
         run: |
-          poetry run tox -e 'py-{1.9,1.10}'
+          poetry run tox -e 'py-1.9,py-1.10'
