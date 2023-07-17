@@ -41,7 +41,7 @@ class Something(PartialModelMixin, pydantic.BaseModel):
 
 # Create a full partial model
 FullSomethingPartial = Something.model_as_partial()
-FullSomethingPartial(name=None, age=None)
+FullSomethingPartial()  # Same as FullSomethingPartial(name=None, age=None)
 ```
 
 ### Without using the mixin
@@ -60,7 +60,7 @@ class Something(pydantic.BaseModel):
 
 # Create a full partial model
 FullSomethingPartial = create_partial_model(Something)
-FullSomethingPartial(name=None, age=None)
+FullSomethingPartial()  # Same as FullSomethingPartial(name=None, age=None)
 ```
 
 ### Only changing some fields to being optional
@@ -79,8 +79,8 @@ class Something(pydantic.BaseModel):
 
 # Create a partial model only for the name attribute
 FullSomethingPartial = create_partial_model(Something, 'name')
-FullSomethingPartial(name=None)
-# This would still raise an error: FullSomethingPartial(age=None)
+FullSomethingPartial(age=40)  # Same as FullSomethingPartial(name=None, age=40)
+# This would still raise an error: FullSomethingPartial(age=None, ...)
 ```
 
 ### Recursive partials
