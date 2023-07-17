@@ -1,6 +1,8 @@
 import pydantic
+import pytest
 
 from pydantic_partial import PartialModelMixin, create_partial_model
+from pydantic_partial._compat import PYDANTIC_V1, PYDANTIC_V2
 
 
 class Something(pydantic.BaseModel):
@@ -13,12 +15,29 @@ class SomethingWithMixin(PartialModelMixin, pydantic.BaseModel):
     name: str
 
 
-def test_setup_is_sane():
+@pytest.mark.skipif(PYDANTIC_V1, reason="pydantic v1 did change fields handling")
+def test_setup_is_sane_v2():
+    assert Something.model_fields["name"].is_required() is True
+    assert Something.model_fields["age"].is_required() is True
+
+
+@pytest.mark.skipif(PYDANTIC_V2, reason="pydantic v1 did change fields handling")
+def test_setup_is_sane_v1():
     assert Something.__fields__["name"].required is True
     assert Something.__fields__["age"].required is True
 
 
-def test_partial_will_make_all_fields_optional():
+@pytest.mark.skipif(PYDANTIC_V1, reason="pydantic v1 did change fields handling")
+def test_partial_will_make_all_fields_optional_v2():
+    SomethingPartial = create_partial_model(Something)
+
+    assert SomethingPartial.model_fields["name"].is_required() is False
+    assert SomethingPartial.model_fields["age"].is_required() is False
+    SomethingPartial()
+
+
+@pytest.mark.skipif(PYDANTIC_V2, reason="pydantic v1 did change fields handling")
+def test_partial_will_make_all_fields_optional_v1():
     SomethingPartial = create_partial_model(Something)
 
     assert SomethingPartial.__fields__["name"].required is False

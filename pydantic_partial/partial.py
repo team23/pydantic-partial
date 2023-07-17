@@ -25,11 +25,11 @@ FullSomethingPartial(name=None, age=None)
 """
 
 import functools
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union, get_args, get_origin
+from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, get_args, get_origin
 
 import pydantic
 
-from .utils import copy_field_info
+from ._compat import PydanticCompat
 
 SelfT = TypeVar("SelfT", bound=pydantic.BaseModel)
 
@@ -41,10 +41,10 @@ def create_partial_model(
     recursive: bool = False,
 ) -> Type[SelfT]:
     # Convert one type to being partial - if possible
-    def _partial_type(field_name_: str, field_type_: Type) -> Type:
+    def _partial_annotation_arg(field_name_: str, field_annotation: Type) -> Type:
         if (
-                isinstance(field_type_, type)
-                and issubclass(field_type_, PartialModelMixin)
+                isinstance(field_annotation, type)
+                and issubclass(field_annotation, PartialModelMixin)
         ):
             field_prefix = f"{field_name_}."
             children_fields = [
@@ -55,67 +55,66 @@ def create_partial_model(
             ]
             if children_fields == ["*"]:
                 children_fields = []
-            return field_type_.as_partial(*children_fields, recursive=recursive)
+            return field_annotation.as_partial(*children_fields, recursive=recursive)
         else:
-            return field_type_
+            return field_annotation
+
+    model_compat = PydanticCompat(base_cls)
 
     # By default make all fields optional, but use passed fields when possible
     if fields:
         fields_ = list(fields)
     else:
-        fields_ = list(base_cls.__fields__.keys())
+        fields_ = list(model_compat.model_fields.keys())
 
     # Construct list of optional new field overrides
     optional_fields: dict[str, Any] = {}
-    for field_name in base_cls.__fields__.keys():
-        field_type = base_cls.__fields__[field_name].outer_type_
-        if field_type is None:
+    for field_name, field_info in model_compat.model_fields.items():
+        field_annotation = model_compat.get_model_field_info_annotation(field_info)
+        if field_annotation is None:
             continue
 
         # Do we have any fields starting with $FIELD_NAME + "."?
-        has_sub_fields = any(
+        sub_fields_requested = any(
             field.startswith(f"{field_name}.")
             for field
             in fields_
         )
 
         # Continue if this field needs not to be handled
-        if field_name not in fields_ and not has_sub_fields:
+        if field_name not in fields_ and not sub_fields_requested:
             continue
 
         # Change type for sub models, if requested
-        if recursive or has_sub_fields:
-            field_type_origin = get_origin(field_type)
-            if field_type_origin in (Union, list, List, dict, Dict):
-                field_type = field_type_origin[
+        if recursive or sub_fields_requested:
+            field_annotation_origin = get_origin(field_annotation)
+            if field_annotation_origin in (Union, list, Tuple, tuple, List, dict, Dict):
+                field_annotation = field_annotation_origin[
                     tuple(
-                        _partial_type(field_name, field_args_type)
-                        for field_args_type
-                        in get_args(field_type)
+                        _partial_annotation_arg(field_name, field_annotation_arg)
+                        for field_annotation_arg
+                        in get_args(field_annotation)
                     )
                 ]
             else:
-                field_type = _partial_type(field_name, field_type)
+                field_annotation = _partial_annotation_arg(field_name, field_annotation)
 
         # Construct new field definition
         if field_name in fields_:
-            if (
-                base_cls.__fields__[field_name].required
-                or base_cls.__fields__[field_name].default is not None
-            ):
+            if model_compat.is_model_field_info_required(field_info):
                 optional_fields[field_name] = (
-                    Optional[field_type],
-                    copy_field_info(
-                        base_cls.__fields__[field_name].field_info,
+                    Optional[field_annotation],
+                    model_compat.copy_model_field_info(
+                        field_info,
                         default=None,  # Set default to None
                         defaul_factory=None,  # Remove default_factory if set
                         nullable=True,  # For API usage
                     ),
                 )
-        elif recursive or has_sub_fields:
+        elif recursive or sub_fields_requested:
             optional_fields[field_name] = (
-                field_type,
-                copy_field_info(base_cls.__fields__[field_name].field_info),
+                field_annotation,
+                model_compat.copy_model_field_info(field_info),
             )
 
     # Return original model class if nothing has changed

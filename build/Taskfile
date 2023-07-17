@@ -31,7 +31,7 @@ task:poetry() {
 }
 
 task:test() {
-    task:poetry run pytest --cov=pydantic_partial --cov-report term-missing:skip-covered
+    task:poetry run pytest --cov=pydantic_partial --cov-report term-missing:skip-covered "$@"
 }
 
 task:test:all() {
