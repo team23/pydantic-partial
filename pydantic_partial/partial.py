@@ -25,6 +25,7 @@ FullSomethingPartial(name=None, age=None)
 """
 
 import functools
+import warnings
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, get_args, get_origin
 
 import pydantic
@@ -32,6 +33,7 @@ import pydantic
 from ._compat import PydanticCompat
 
 SelfT = TypeVar("SelfT", bound=pydantic.BaseModel)
+ModelSelfT = TypeVar("ModelSelfT", bound="PartialModelMixin")
 
 
 @functools.lru_cache(maxsize=None, typed=True)
@@ -55,7 +57,7 @@ def create_partial_model(
             ]
             if children_fields == ["*"]:
                 children_fields = []
-            return field_annotation.as_partial(*children_fields, recursive=recursive)
+            return field_annotation.model_as_partial(*children_fields, recursive=recursive)
         else:
             return field_annotation
 
@@ -136,9 +138,21 @@ class PartialModelMixin(pydantic.BaseModel):
     """
 
     @classmethod
-    def as_partial(  # noqa: C901
-        cls: Type[SelfT],
+    def model_as_partial(
+        cls: Type[ModelSelfT],
         *fields: str,
         recursive: bool = False,
-    ) -> Type[SelfT]:
+    ) -> Type[ModelSelfT]:
         return create_partial_model(cls, *fields, recursive=recursive)
+
+    @classmethod
+    def as_partial(
+        cls: Type[ModelSelfT],
+        *fields: str,
+        recursive: bool = False,
+    ) -> Type[ModelSelfT]:
+        warnings.warn(
+            "as_partial(...) is deprecated, use model_as_partial(...) instead",
+            DeprecationWarning,
+        )
+        return cls.model_as_partial(*fields, recursive=recursive)
