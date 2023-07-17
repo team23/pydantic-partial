@@ -12,9 +12,9 @@ if PYDANTIC_V2:
 
 class Something(PartialModelMixin, pydantic.BaseModel):
     if PYDANTIC_V2:
-        name: str = pydantic.Field(..., alias="test_name", title="TEST Name", json_schema_extra={"something_else": True})  # noqa
+        name: str = pydantic.Field(..., alias="test_name", title="TEST Name", json_schema_extra={"something_else": True})
     if PYDANTIC_V1:
-        name: str = pydantic.Field(..., alias="test_name", title="TEST Name", something_else=True)  # noqa
+        name: str = pydantic.Field(..., alias="test_name", title="TEST Name", something_else=True)  # type: ignore
     age: int
     already_optional: None = None
 
