@@ -30,7 +30,7 @@ if PYDANTIC_V1:  # pragma: no cover
             return self.model_class.__fields__
 
         def get_model_field_info_annotation(self, model_field: ModelField) -> type:
-            return model_field.type_  # type: ignore
+            return model_field.outer_type_  # type: ignore
 
         def is_model_field_info_required(self, model_field: ModelField) -> bool:
             return (

@@ -71,8 +71,8 @@ def create_partial_model(
     optional_fields: dict[str, Any] = {}
     for field_name, field_info in model_compat.model_fields.items():
         field_annotation = model_compat.get_model_field_info_annotation(field_info)
-        if field_annotation is None:
-            continue
+        if field_annotation is None:  # pragma: no cover
+            continue  # This is just to handle edge cases for pydantic 1.x - can be removed in pydantic 2.0
 
         # Do we have any fields starting with $FIELD_NAME + "."?
         sub_fields_requested = any(
