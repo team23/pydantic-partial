@@ -10,14 +10,14 @@ PYDANTIC_V1 = PYDANTIC_VERSION.startswith("1.")
 PYDANTIC_V2 = PYDANTIC_VERSION.startswith("2.")
 
 if PYDANTIC_V1:  # pragma: no cover
-    from pydantic.fields import ModelField
+    from pydantic.fields import ModelField  # type: ignore
 
     class PydanticCompat:  # noqa: F811
         model_class: Type[pydantic.BaseModel]
 
         def __init__(
             self,
-            model_class: pydantic.BaseModel,
+            model_class: Type[pydantic.BaseModel],
         ) -> None:
             self.model_class = model_class
 
@@ -27,7 +27,7 @@ if PYDANTIC_V1:  # pragma: no cover
 
         @property
         def model_fields(self) -> Dict[str, ModelField]:
-            return self.model_class.__fields__
+            return self.model_class.__fields__  # type: ignore
 
         def get_model_field_info_annotation(self, model_field: ModelField) -> type:
             return model_field.outer_type_  # type: ignore
@@ -47,7 +47,7 @@ elif PYDANTIC_V2:  # pragma: no cover
 
         def __init__(
             self,
-            model_class: pydantic.BaseModel,
+            model_class: Type[pydantic.BaseModel],
         ) -> None:
             self.model_class = model_class
 
