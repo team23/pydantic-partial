@@ -40,7 +40,7 @@ class Something(PartialModelMixin, pydantic.BaseModel):
 
 
 # Create a full partial model
-FullSomethingPartial = Something.as_partial()
+FullSomethingPartial = Something.model_as_partial()
 FullSomethingPartial(name=None, age=None)
 ```
 
