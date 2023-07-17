@@ -4,6 +4,10 @@
 
 Just use `pip install pydantic-partial` to install the library.
 
+**Note:** `pydantic-partial` is compatible with `pydantic` versions `1.9`, `1.10` and even `2.0` (🥳) on
+Python `3.9`, `3.10` and `3.11`. This is also ensured running all tests on all those versions
+using `tox`.
+
 ## About
 
 Create partial models from your normal pydantic models. Partial models will allow
