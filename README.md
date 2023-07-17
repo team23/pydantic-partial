@@ -112,6 +112,34 @@ converted to partial models.
 partials by creating partials for all the required models and then override
 the fields on you outer partial model class. This is way more explicit.
 
+## Known limitations
+
+`pydantic-partial` cannot generate new class types that actually are supported by the
+Python typing system tolls. This means that the partial models will only be recognized
+the same as their original model classes - type checkers will not know about the partial
+model changes and thus will think all those partial fields are required.
+
+This is due to the fact that Python itself has no concept of partials. `pydantic-partial`
+could (in theory) provide plugins for `mypy` for example to "patch" this in, but this would
+be a massive amount of work while being kind of a bad hack. The real solution would be to
+have a partial type in Python itself, but this is not planned for the near future as far
+as I know.
+
+My recommendation is to use `pydantic-partial` only for API use cases where you do not
+need to work with the partial aspects of the models - they are just the DTOs (data transfer
+objects) you are using. If you need to use partial models in other cases you might get
+errors by your type checker - if you use one. Please be aware of this.
+
+**Note:** Not having a good solution in Python itself for this is the reason `pydantic` does
+not support partial models in the first place. `pydantic-partial` is just a really good
+workaround for this.  
+See [issue 2](https://github.com/team23/pydantic-partial/issues/2) in this project and
+[issue 1673](https://github.com/pydantic/pydantic/issues/1673#issuecomment-1557267229)
+in the `pydantic` project for reference.
+
+Having that all said: If anyone wants to get a working plugin for `mypy` or others ready,
+I'm going to very much support this. 
+
 # Contributing
 
 If you want to contribute to this project, feel free to just fork the project,
