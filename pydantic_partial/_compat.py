@@ -9,6 +9,8 @@ from .utils import copy_field_info
 PYDANTIC_V1 = PYDANTIC_VERSION.startswith("1.")
 PYDANTIC_V2 = PYDANTIC_VERSION.startswith("2.")
 
+NULLABLE_KWARGS: Dict[str, Any]
+
 if PYDANTIC_V1:  # pragma: no cover
     from pydantic.fields import ModelField  # type: ignore
 
