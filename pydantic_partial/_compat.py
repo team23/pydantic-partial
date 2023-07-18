@@ -12,6 +12,8 @@ PYDANTIC_V2 = PYDANTIC_VERSION.startswith("2.")
 if PYDANTIC_V1:  # pragma: no cover
     from pydantic.fields import ModelField  # type: ignore
 
+    NULLABLE_KWARGS = {"nullable": True}
+
     class PydanticCompat:  # noqa: F811
         model_class: Type[pydantic.BaseModel]
 
@@ -42,6 +44,8 @@ if PYDANTIC_V1:  # pragma: no cover
             return copy_field_info(model_field.field_info, **kwargs)
 
 elif PYDANTIC_V2:  # pragma: no cover
+    NULLABLE_KWARGS = {"json_schema_extra": {"nullable": True}}
+
     class PydanticCompat:  # type: ignore
         model_class: Type[pydantic.BaseModel]
 

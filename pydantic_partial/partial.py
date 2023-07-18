@@ -30,7 +30,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, get_a
 
 import pydantic
 
-from ._compat import PydanticCompat
+from ._compat import NULLABLE_KWARGS, PydanticCompat
 
 SelfT = TypeVar("SelfT", bound=pydantic.BaseModel)
 ModelSelfT = TypeVar("ModelSelfT", bound="PartialModelMixin")
@@ -110,7 +110,7 @@ def create_partial_model(
                         field_info,
                         default=None,  # Set default to None
                         defaul_factory=None,  # Remove default_factory if set
-                        nullable=True,  # For API usage
+                        **NULLABLE_KWARGS,  # For API usage: set field as nullable
                     ),
                 )
         elif recursive or sub_fields_requested:

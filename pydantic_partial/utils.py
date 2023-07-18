@@ -13,6 +13,17 @@ def copy_field_info(field_info: FieldInfo, **overrides: Any) -> FieldInfo:
     certain values.
     """
 
+    if (
+        _compat.PYDANTIC_V2
+        and "json_schema_extra" in overrides
+        and field_info.json_schema_extra
+    ):
+        overrides = overrides.copy()
+        overrides["json_schema_extra"] = {
+            **field_info.json_schema_extra,
+            **overrides["json_schema_extra"],
+        }
+
     return pydantic.Field(
         **{
             **{
