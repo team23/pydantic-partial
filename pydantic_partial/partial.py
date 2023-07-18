@@ -109,7 +109,7 @@ def create_partial_model(
                     model_compat.copy_model_field_info(
                         field_info,
                         default=None,  # Set default to None
-                        defaul_factory=None,  # Remove default_factory if set
+                        default_factory=None,  # Remove default_factory if set
                         **NULLABLE_KWARGS,  # For API usage: set field as nullable
                     ),
                 )
