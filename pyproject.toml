@@ -24,6 +24,7 @@ flake8-print = "^5.0.0"
 flake8-debugger = "^4.1.2"
 pytest-cov = ">=3,<5"
 tox = ">=3.26,<5.0"
+ruff = "^0.0.284"
 
 [tool.isort]
 multi_line_output = 3
