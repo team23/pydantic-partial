@@ -4,10 +4,10 @@ install-pre-commit:
     then
         pre-commit install --install-hooks
     else
-        b5:warn "-----------------------------------------------------------------"
-        b5:warn "pre-commit is not installed - cannot enable pre-commit hooks!"
-        b5:warn "Recommendation: Install pre-commit ('brew install pre-commit')."
-        b5:warn "-----------------------------------------------------------------"
+        echo "-----------------------------------------------------------------"
+        echo "pre-commit is not installed - cannot enable pre-commit hooks!"
+        echo "Recommendation: Install pre-commit ('brew install pre-commit')."
+        echo "-----------------------------------------------------------------"
     fi
 
 install: install-pre-commit (poetry "install")
