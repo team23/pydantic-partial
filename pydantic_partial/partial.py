@@ -26,7 +26,7 @@ FullSomethingPartial(name=None, age=None)
 
 import functools
 import warnings
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union, get_args, get_origin
+from typing import Any, Optional, TypeVar, Union, get_args, get_origin
 
 import pydantic
 
@@ -38,12 +38,12 @@ ModelSelfT = TypeVar("ModelSelfT", bound="PartialModelMixin")
 
 @functools.lru_cache(maxsize=None, typed=True)
 def create_partial_model(
-    base_cls: Type[SelfT],
+    base_cls: type[SelfT],
     *fields: str,
     recursive: bool = False,
-) -> Type[SelfT]:
+) -> type[SelfT]:
     # Convert one type to being partial - if possible
-    def _partial_annotation_arg(field_name_: str, field_annotation: Type) -> Type:
+    def _partial_annotation_arg(field_name_: str, field_annotation: type) -> type:
         if (
                 isinstance(field_annotation, type)
                 and issubclass(field_annotation, PartialModelMixin)
@@ -90,7 +90,7 @@ def create_partial_model(
         # Change type for sub models, if requested
         if recursive or sub_fields_requested:
             field_annotation_origin = get_origin(field_annotation)
-            if field_annotation_origin in (Union, list, Tuple, tuple, List, dict, Dict):
+            if field_annotation_origin in (Union, list, tuple, tuple, list, dict, dict):
                 field_annotation = field_annotation_origin[
                     tuple(
                         _partial_annotation_arg(field_name, field_annotation_arg)
@@ -139,20 +139,21 @@ class PartialModelMixin(pydantic.BaseModel):
 
     @classmethod
     def model_as_partial(
-        cls: Type[ModelSelfT],
+        cls: type[ModelSelfT],
         *fields: str,
         recursive: bool = False,
-    ) -> Type[ModelSelfT]:
+    ) -> type[ModelSelfT]:
         return create_partial_model(cls, *fields, recursive=recursive)
 
     @classmethod
     def as_partial(
-        cls: Type[ModelSelfT],
+        cls: type[ModelSelfT],
         *fields: str,
         recursive: bool = False,
-    ) -> Type[ModelSelfT]:
+    ) -> type[ModelSelfT]:
         warnings.warn(
             "as_partial(...) is deprecated, use model_as_partial(...) instead",
             DeprecationWarning,
+            stacklevel=2,
         )
         return cls.model_as_partial(*fields, recursive=recursive)
