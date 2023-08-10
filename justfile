@@ -1,5 +1,5 @@
 install-pre-commit:
-    #!/bin/bash
+    #!/usr/bin/env bash
     if ( which pre-commit > /dev/null 2>&1 )
     then
         pre-commit install --install-hooks
