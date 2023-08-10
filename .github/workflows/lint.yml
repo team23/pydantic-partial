@@ -1,4 +1,4 @@
-name: "LINT: Run flake8 & mypy"
+name: "LINT: Run ruff & mypy"
 on: [push, pull_request]
 jobs:
   linting:
