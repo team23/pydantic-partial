@@ -18,11 +18,6 @@ mypy = ">=0.971,<2.0"
 tox = ">=3.26,<5.0"
 ruff = "^0.0.284"
 
-[tool.isort]
-multi_line_output = 3
-include_trailing_comma = true
-line_length = 115
-
 [tool.ruff]
 select = ["F","E","W","C","I","N","UP","ANN","S","B","A","COM","C4","T20","PT","ARG","TD","RUF"]
 line-length = 115
