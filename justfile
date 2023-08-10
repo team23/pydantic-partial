@@ -21,7 +21,7 @@ test *args: (poetry "run" "pytest" "--cov=pydantic_partial" "--cov-report" "term
 
 test-all: (poetry "run" "tox")
 
-ruff *args: (poetry "run" "ruff" "pydantic_partial" "tests" args)
+ruff *args: (poetry "run" "ruff" "check" "pydantic_partial" "tests" args)
 
 mypy *args:  (poetry "run" "mypy" "pydantic_partial" args)
 
