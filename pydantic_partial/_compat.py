@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Type
+from typing import Any, Optional
 
 import pydantic
 from pydantic.fields import FieldInfo
@@ -9,19 +9,19 @@ from .utils import copy_field_info
 PYDANTIC_V1 = PYDANTIC_VERSION.startswith("1.")
 PYDANTIC_V2 = PYDANTIC_VERSION.startswith("2.")
 
-NULLABLE_KWARGS: Dict[str, Any]
+NULLABLE_KWARGS: dict[str, Any]
 
 if PYDANTIC_V1:  # pragma: no cover
     from pydantic.fields import ModelField  # type: ignore
 
     NULLABLE_KWARGS = {"nullable": True}
 
-    class PydanticCompat:  # noqa: F811
-        model_class: Type[pydantic.BaseModel]
+    class PydanticCompat:
+        model_class: type[pydantic.BaseModel]
 
         def __init__(
             self,
-            model_class: Type[pydantic.BaseModel],
+            model_class: type[pydantic.BaseModel],
         ) -> None:
             self.model_class = model_class
 
@@ -30,7 +30,7 @@ if PYDANTIC_V1:  # pragma: no cover
         # pydantic 2.x naming.
 
         @property
-        def model_fields(self) -> Dict[str, ModelField]:
+        def model_fields(self) -> dict[str, ModelField]:
             return self.model_class.__fields__  # type: ignore
 
         def get_model_field_info_annotation(self, model_field: ModelField) -> type:
@@ -49,19 +49,19 @@ elif PYDANTIC_V2:  # pragma: no cover
     NULLABLE_KWARGS = {"json_schema_extra": {"nullable": True}}
 
     class PydanticCompat:  # type: ignore
-        model_class: Type[pydantic.BaseModel]
+        model_class: type[pydantic.BaseModel]
 
         def __init__(
             self,
-            model_class: Type[pydantic.BaseModel],
+            model_class: type[pydantic.BaseModel],
         ) -> None:
             self.model_class = model_class
 
         @property
-        def model_fields(self) -> Dict[str, FieldInfo]:
+        def model_fields(self) -> dict[str, FieldInfo]:
             return self.model_class.model_fields
 
-        def get_model_field_info_annotation(self, field_info: FieldInfo) -> Optional[Type[Any]]:
+        def get_model_field_info_annotation(self, field_info: FieldInfo) -> Optional[type[Any]]:
             return field_info.annotation
 
         def is_model_field_info_required(self, field_info: FieldInfo) -> bool:
