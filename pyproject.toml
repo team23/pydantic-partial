@@ -31,6 +31,17 @@ multi_line_output = 3
 include_trailing_comma = true
 line_length = 115
 
+[tool.ruff]
+select = ["F","E","W","C","I","N","UP","ANN","S","B","A","COM","C4","T20","PT","ARG","TD","RUF"]
+line-length = 115
+target-version = "py39"
+ignore = ["A001","A002","A003","ANN101","ANN102","ANN401","C901","N8","B008","F405","F821"]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]
+"conftest.py" = ["S101","ANN","F401"]
+"test_*.py" = ["S101","ANN","F401"]
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

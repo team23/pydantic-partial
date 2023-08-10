@@ -21,12 +21,10 @@ test *args: (poetry "run" "pytest" "--cov=pydantic_partial" "--cov-report" "term
 
 test-all: (poetry "run" "tox")
 
-isort: (poetry "run" "isort" "pydantic_partial" "tests")
+ruff *args: (poetry "run" "ruff" "pydantic_partial" "tests" args)
 
-flake8: (poetry "run" "flake8" "pydantic_partial" "tests")
+mypy *args:  (poetry "run" "mypy" "pydantic_partial" args)
 
-mypy:  (poetry "run" "mypy" "pydantic_partial")
-
-lint: flake8 mypy
+lint: ruff mypy
 
 publish: (poetry "publish" "--build")
