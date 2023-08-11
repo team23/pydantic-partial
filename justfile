@@ -1,4 +1,8 @@
-install-pre-commit:
+default:
+    just --list
+
+[unix]
+_install-pre-commit:
     #!/usr/bin/env bash
     if ( which pre-commit > /dev/null 2>&1 )
     then
@@ -10,7 +14,12 @@ install-pre-commit:
         echo "-----------------------------------------------------------------"
     fi
 
-install: install-pre-commit (poetry "install")
+[windows]
+_install-pre-commit:
+    #!powershell.exe
+    Write-Host "Please ensure pre-commit hooks are installed using 'pre-commit install --install-hooks'"
+
+install: (poetry "install") && _install-pre-commit
 
 update: (poetry "install")
 
