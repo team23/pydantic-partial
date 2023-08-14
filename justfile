@@ -32,7 +32,7 @@ test-all: (poetry "run" "tox")
 
 ruff *args: (poetry "run" "ruff" "check" "pydantic_partial" "tests" args)
 
-mypy *args:  (poetry "run" "mypy" "pydantic_partial" args)
+mypy *args: (poetry "run" "mypy" "pydantic_partial" args)
 
 lint: ruff mypy
 
