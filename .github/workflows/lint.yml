@@ -1,7 +1,11 @@
 name: "LINT: Run ruff & mypy"
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 7 * * 1'
 jobs:
-  linting:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
