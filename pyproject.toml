@@ -14,18 +14,20 @@ pydantic = ">=1.9.0,<3.0.0"
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.1.2,<9.0.0"
 pytest-cov = ">=3,<5"
-mypy = ">=0.971,<2.0"
 tox = ">=3.26,<5.0"
-ruff = ">=0.0.284,<0.3.0"
+ruff = ">=0.2.0,<0.3.0"
+pyright = ">=1.1.350,<1.2"
 
 [tool.ruff]
-select = ["F","E","W","C","I","N","UP","ANN","S","B","A","COM","C4","T20","PT","ARG","TD","RUF"]
 line-length = 115
 target-version = "py39"
-ignore = ["A001","A002","A003","ANN101","ANN102","ANN401","C901","N8","B008","F405","F821"]
 output-format = "grouped"
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint]
+select = ["F","E","W","C","I","N","UP","ANN","S","B","A","COM","C4","T20","PT","ARG","TD","RUF"]
+ignore = ["A001","A002","A003","ANN101","ANN102","ANN401","C901","N8","B008","F405","F821"]
+
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "conftest.py" = ["S101","ANN","F401"]
 "test_*.py" = ["S101","ANN","F401"]

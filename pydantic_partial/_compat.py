@@ -16,7 +16,7 @@ if PYDANTIC_V1:  # pragma: no cover
 
     NULLABLE_KWARGS = {"nullable": True}
 
-    class PydanticCompat:
+    class PydanticCompat:  # type: ignore
         model_class: type[pydantic.BaseModel]
 
         def __init__(
@@ -42,7 +42,7 @@ if PYDANTIC_V1:  # pragma: no cover
                 or model_field.default is not None
             )
 
-        def copy_model_field_info(self, model_field: ModelField, **kwargs: Any) -> bool:
+        def copy_model_field_info(self, model_field: ModelField, **kwargs: Any) -> FieldInfo:
             return copy_field_info(model_field.field_info, **kwargs)
 
 elif PYDANTIC_V2:  # pragma: no cover
@@ -67,5 +67,5 @@ elif PYDANTIC_V2:  # pragma: no cover
         def is_model_field_info_required(self, field_info: FieldInfo) -> bool:
             return field_info.is_required()  # type: ignore
 
-        def copy_model_field_info(self, field_info: FieldInfo, **kwargs: Any) -> bool:
+        def copy_model_field_info(self, field_info: FieldInfo, **kwargs: Any) -> FieldInfo:
             return copy_field_info(field_info, **kwargs)

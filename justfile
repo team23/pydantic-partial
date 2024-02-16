@@ -32,8 +32,8 @@ test-all: (poetry "run" "tox")
 
 ruff *args: (poetry "run" "ruff" "check" "pydantic_partial" "tests" args)
 
-mypy *args: (poetry "run" "mypy" "pydantic_partial" args)
+pyright *args: (poetry "run" "pyright" "pydantic_partial" args)
 
-lint: ruff mypy
+lint: ruff pyright
 
 publish: (poetry "publish" "--build")

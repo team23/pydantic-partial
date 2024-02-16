@@ -26,7 +26,7 @@ FullSomethingPartial(name=None, age=None)
 
 import functools
 import warnings
-from typing import Any, Optional, TypeVar, Union, get_args, get_origin
+from typing import Any, Optional, TypeVar, Union, cast, get_args, get_origin
 
 import pydantic
 
@@ -91,7 +91,7 @@ def create_partial_model(
         if recursive or sub_fields_requested:
             field_annotation_origin = get_origin(field_annotation)
             if field_annotation_origin in (Union, list, tuple, tuple, list, dict, dict):
-                field_annotation = field_annotation_origin[
+                field_annotation = field_annotation_origin[  # type: ignore
                     tuple(
                         _partial_annotation_arg(field_name, field_annotation_arg)
                         for field_annotation_arg
@@ -143,7 +143,10 @@ class PartialModelMixin(pydantic.BaseModel):
         *fields: str,
         recursive: bool = False,
     ) -> type[ModelSelfT]:
-        return create_partial_model(cls, *fields, recursive=recursive)
+        return cast(
+            type[ModelSelfT],
+            create_partial_model(cls, *fields, recursive=recursive),
+        )
 
     @classmethod
     def as_partial(
