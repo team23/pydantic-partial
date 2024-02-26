@@ -1,7 +1,8 @@
-from typing import get_args
+from typing import Annotated, get_args
 
 import pydantic
 import pytest
+from annotated_types import MinLen
 
 from pydantic_partial import PartialModelMixin
 from pydantic_partial._compat import PYDANTIC_V1, PYDANTIC_V2
@@ -33,6 +34,10 @@ class Something(PartialModelMixin, pydantic.BaseModel):
 
 class SomethingList(PartialModelMixin, pydantic.BaseModel):
     items: list[Something]
+
+
+class SomethingListWithAnnotatedMinItems(PartialModelMixin, pydantic.BaseModel):
+    items: Annotated[list[Something], MinLen(1)]
 
 
 @pytest.mark.skipif(PYDANTIC_V1, reason="pydantic v1 did change fields handling")
@@ -277,3 +282,18 @@ def test_no_change_to_optional_fields():
 def test_as_partial_works_as_expected():
     with pytest.warns(DeprecationWarning):
         assert Something.model_as_partial() is Something.as_partial()
+
+
+@pytest.mark.skipif(PYDANTIC_V1, reason="pydantic v1 doesn't support Annotated")
+def test_as_partial_copies_annotated_validators():
+    SomethingListWithAnnotatedMinItemsPartial = SomethingListWithAnnotatedMinItems.model_as_partial()
+    with pytest.raises(pydantic.ValidationError):
+        SomethingListWithAnnotatedMinItemsPartial(items=[])
+
+
+@pytest.mark.skipif(PYDANTIC_V1, reason="pydantic v1 doesn't support Annotated")
+def test_as_partial_ignores_annotated_validators():
+    SomethingListWithAnnotatedMinItemsPartial = SomethingListWithAnnotatedMinItems.model_as_partial(
+        ignore_validators=True
+    )
+    SomethingListWithAnnotatedMinItemsPartial(items=[])
