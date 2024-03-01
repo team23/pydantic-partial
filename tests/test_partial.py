@@ -1,5 +1,5 @@
-import re
-from typing import Any, get_args
+from collections.abc import Iterable
+from typing import Any, Union, get_args
 
 import pydantic
 import pytest
@@ -367,53 +367,89 @@ def test_partial_allows_explicit_recursive_v1():
     SomethingListPartial(items=[])
     SomethingListPartial(items=[{"age": 1}])
 
-def test_partial_allows_explicit_recursive():
-    SomethingListPartial = SomethingList.model_as_partial("items.*")
+@pytest.mark.parametrize(
+    ("partial_fields",
+    "recursive",
+    "items_required",
+    "name_required",
+    "age_required",
+    "example_items"),
+[
+    pytest.param(
+        ("items.*",),
+        False,
+        True,
+        False,
+        False,
+        [[]],
+        id="items.*",
+    ),
+    pytest.param(
+        ("items",),
+        False,
+        False,
+        True,
+        True,
+        [[],None],
+        id="items",
+    ),
+    pytest.param(
+        ("items.name",),
+        False,
+        True,
+        False,
+        True,
+        [
+            [],
+            [{"age": 1}],
+        ],
+        id="items.name",
+    ),
+    pytest.param(
+        (),
+        True,
+        False,
+        False,
+        False,
+        [
+            [],
+            None,
+            [{}],
+        ],
+    id="recursive",
+    ),
+    pytest.param(
+        ("items.name",),
+        True,
+        True,
+        False,
+        True,
+        [
+            [],
+            [{"age": 1}],
+        ],
+        id="items.name - recursive",
+    ),
 
-    assert _field_is_required(SomethingListPartial,"items") is True
+],
+)
+def test_partial_allows_explicit_recursive(
+    partial_fields: Iterable[str],
+    recursive: bool,
+    items_required: bool,
+    name_required: bool,
+    age_required: bool,
+    example_items: Iterable[Union[None,list[Any]]],
+):
+    SomethingListPartial = SomethingList.model_as_partial(*partial_fields,recursive=recursive)
+
+    assert _field_is_required(SomethingListPartial,"items") is items_required
     sub_type = _get_subtype(SomethingListPartial,"items")  # List[...]
-    assert _field_is_required(sub_type,"name") is False
-    assert _field_is_required(sub_type,"age") is False
-    SomethingListPartial(items=[])
+    assert _field_is_required(sub_type,"name") is name_required
+    assert _field_is_required(sub_type,"age") is age_required
+    for example in example_items:
+        SomethingListPartial(items=example)
 
-    SomethingListPartial = SomethingList.model_as_partial("items")
-
-    assert _field_is_required(SomethingListPartial,"items") is False
-    # Optional[List[...]]
-    sub_type = _get_subtype(SomethingListPartial,"items")
-    assert _field_is_required(sub_type,"name") is True
-    assert _field_is_required(sub_type,"age") is True
-    SomethingListPartial(items=[])
-    SomethingListPartial(items=None)
-
-    SomethingListPartial = SomethingList.model_as_partial("items.name")
-
-    assert _field_is_required(SomethingListPartial,"items") is True
-    sub_type = _get_subtype(SomethingListPartial,"items")  # List[...]
-    assert _field_is_required(sub_type,"name") is False
-    assert _field_is_required(sub_type,"age") is True
-    SomethingListPartial(items=[])
-    SomethingListPartial(items=[{"age": 1}])
-
-    SomethingListPartial = SomethingList.model_as_partial(recursive=True)
-
-    assert _field_is_required(SomethingListPartial,"items") is False
-    # Optional[List[...]]
-    sub_type = _get_subtype(SomethingListPartial,"items")
-    assert _field_is_required(sub_type,"name") is False
-    assert _field_is_required(sub_type,"age") is False
-    SomethingListPartial(items=[])
-    SomethingListPartial(items=None)
-    SomethingListPartial(items=[{}])
-
-    SomethingListPartial = SomethingList.model_as_partial("items.name", recursive=True)
-
-    assert _field_is_required(SomethingListPartial,"items") is True
-    sub_type = _get_subtype(SomethingListPartial,"items")  # List[...]
-    assert _field_is_required(sub_type,"name") is False
-    assert _field_is_required(sub_type,"age") is True
-    SomethingListPartial(items=[])
-    SomethingListPartial(items=[{"age": 1}])
 
 def test_no_change_to_optional_fields():
     SomethingPartial = Something.model_as_partial("already_optional")
