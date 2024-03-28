@@ -26,7 +26,7 @@ FullSomethingPartial(name=None, age=None)
 
 import functools
 import warnings
-from typing import Any, Optional, TypeVar, Union, cast, get_args, get_origin
+from typing import Any, Optional, TypeVar, Union, cast, get_args, get_origin, Annotated
 
 import pydantic
 
@@ -41,6 +41,7 @@ def create_partial_model(
     base_cls: type[SelfT],
     *fields: str,
     recursive: bool = False,
+    ignore_validators: bool = False,
 ) -> type[SelfT]:
     # Convert one type to being partial - if possible
     def _partial_annotation_arg(field_name_: str, field_annotation: type) -> type:
@@ -101,6 +102,10 @@ def create_partial_model(
             else:
                 field_annotation = _partial_annotation_arg(field_name, field_annotation)
 
+        # Copy validators if requested
+        if not ignore_validators and field_info.metadata:
+            field_annotation = Annotated[field_annotation, *field_info.metadata]
+
         # Construct new field definition
         if field_name in fields_:
             if model_compat.is_model_field_info_required(field_info):
@@ -142,10 +147,11 @@ class PartialModelMixin(pydantic.BaseModel):
         cls: type[ModelSelfT],
         *fields: str,
         recursive: bool = False,
+        ignore_validators: bool = False,
     ) -> type[ModelSelfT]:
         return cast(
             type[ModelSelfT],
-            create_partial_model(cls, *fields, recursive=recursive),
+            create_partial_model(cls, *fields, recursive=recursive, ignore_validators=ignore_validators),
         )
 
     @classmethod
