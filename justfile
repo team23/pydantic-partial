@@ -37,3 +37,10 @@ pyright *args: (poetry "run" "pyright" "pydantic_partial" args)
 lint: ruff pyright
 
 publish: (poetry "publish" "--build")
+
+release version: (poetry "version" version)
+    git add pyproject.toml
+    git commit -m "release: 🔖 v$(poetry version --short)" --no-verify
+    git tag "v$(poetry version --short)"
+    git push
+    git push --tags
