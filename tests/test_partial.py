@@ -1,4 +1,5 @@
-from typing import get_args
+from collections.abc import Iterable
+from typing import Any, Union, get_args
 
 import pydantic
 import pytest
@@ -8,6 +9,46 @@ from pydantic_partial._compat import PYDANTIC_V1, PYDANTIC_V2
 
 if PYDANTIC_V2:
     from pydantic import ConfigDict
+
+if PYDANTIC_V1:
+    def _field_is_required(model: pydantic.BaseModel, field_name: str) -> bool:
+        """Check if a field is required on a pydantic V1 model."""
+        return model.__fields__[field_name].required
+
+    def _get_subtype(model:pydantic.BaseModel,field_name: str)-> pydantic.BaseModel:
+        return model.__fields__[field_name].type_
+
+    def _get_alias(model:pydantic.BaseModel,field_name: str)-> str:
+        return model.__fields__[field_name].field_info.alias
+
+    def _get_title(model:pydantic.BaseModel,field_name: str)-> str:
+        return model.__fields__[field_name].field_info.title
+
+    def _get_extra(model:pydantic.BaseModel,field_name: str)-> dict[str,Any]:
+        return model.__fields__[field_name].field_info.extra
+
+elif PYDANTIC_V2:
+    def _field_is_required(model: pydantic.BaseModel, field_name: str) -> bool:
+        """Check if a field is required on a pydantic V2 model."""
+        return model.model_fields[field_name].is_required()
+
+    def _get_subtype(model:pydantic.BaseModel,field_name: str)->pydantic.BaseModel:
+        try:
+            return get_args(get_args(model.model_fields[field_name].annotation)[0])[0]
+        except IndexError:
+            return get_args(model.model_fields[field_name].annotation)[0]
+
+    def _get_alias(model:pydantic.BaseModel,field_name: str)-> str:
+        return model.model_fields[field_name].alias
+
+    def _get_title(model:pydantic.BaseModel,field_name: str)-> str:
+        return model.model_fields[field_name].title
+
+    def _get_extra(model:pydantic.BaseModel,field_name: str)-> dict[str,Any]:
+        return model.model_fields[field_name].json_schema_extra
+
+else:
+    raise DeprecationWarning("Pydantic has to be in version 1 or 2.")
 
 
 class Something(PartialModelMixin, pydantic.BaseModel):
@@ -48,6 +89,10 @@ def test_setup_is_sane_v1():
     assert Something.__fields__["age"].required is True
     assert SomethingList.__fields__["items"].required is True
 
+def test_setup_is_sane():
+    assert _field_is_required(Something,"name") is True
+    assert _field_is_required(Something,"age")  is True
+    assert _field_is_required(SomethingList,"items")  is True
 
 @pytest.mark.skipif(PYDANTIC_V1, reason="pydantic v2 did change fields handling")
 def test_partial_will_make_all_fields_optional_v2():
@@ -66,6 +111,12 @@ def test_partial_will_make_all_fields_optional_v1():
     assert SomethingPartial.__fields__["age"].required is False
     SomethingPartial()
 
+def test_partial_will_make_all_fields_optional():
+    SomethingPartial = Something.model_as_partial()
+
+    assert _field_is_required(SomethingPartial,"name") is False
+    assert _field_is_required(SomethingPartial,"age")  is False
+    SomethingPartial()
 
 @pytest.mark.skipif(PYDANTIC_V1, reason="pydantic v2 did change fields handling")
 def test_partial_will_keep_original_field_options_v2():
@@ -90,6 +141,12 @@ def test_partial_will_keep_original_field_options_v1():
         is True
     )
 
+def test_partial_will_keep_original_field_options():
+    SomethingPartial = Something.model_as_partial()
+
+    assert _get_alias(SomethingPartial,"name") == "test_name"
+    assert _get_title(SomethingPartial,"name") == "TEST Name"
+    assert _get_extra(SomethingPartial,"name")["something_else"] is True
 
 @pytest.mark.skipif(PYDANTIC_V1, reason="pydantic v2 did change fields handling")
 def test_partial_allows_to_only_change_certain_fields_v2():
@@ -141,6 +198,32 @@ def test_partial_allows_to_only_change_certain_fields_v1():
     SomethingPartial()
 
 
+
+def test_partial_allows_to_only_change_certain_fields():
+    SomethingNamePartial = Something.model_as_partial("name")
+
+    assert _field_is_required(SomethingNamePartial,"name") is False
+    assert _field_is_required(SomethingNamePartial,"age") is True
+
+    SomethingNamePartial(age=1)
+    with pytest.raises(pydantic.ValidationError):
+        SomethingNamePartial(name="test")
+
+    SomethingAgePartial = Something.model_as_partial("age")
+
+    assert _field_is_required(SomethingAgePartial,"name") is True
+    assert _field_is_required(SomethingAgePartial,"age") is False
+    SomethingAgePartial(name="test")
+    with pytest.raises(pydantic.ValidationError):
+        SomethingAgePartial(age=1)
+
+    SomethingPartial = Something.model_as_partial("name", "age")
+
+    assert _field_is_required(SomethingPartial,"name") is False
+    assert _field_is_required(SomethingPartial,"age") is False
+    SomethingPartial()
+
+
 @pytest.mark.skipif(PYDANTIC_V1, reason="pydantic v2 did change fields handling")
 def test_partial_allows_recursive_usage_v2():
     SomethingListPartial = SomethingList.model_as_partial()
@@ -173,6 +256,23 @@ def test_partial_allows_recursive_usage_v1():
     assert SomethingListRecursivePartial.__fields__["items"].required is False
     assert SomethingListRecursivePartial.__fields__["items"].type_.__fields__["name"].required is False
     assert SomethingListRecursivePartial.__fields__["items"].type_.__fields__["age"].required is False
+
+def test_partial_allows_recursive_usage():
+    SomethingListPartial = SomethingList.model_as_partial()
+
+    assert _field_is_required(SomethingListPartial,"items") is False
+    # Optional[List[...]]
+    sub_type = _get_subtype(SomethingListPartial, "items")
+    assert _field_is_required(sub_type,"name") is True
+    assert _field_is_required(sub_type,"age") is True
+
+    SomethingListRecursivePartial = SomethingList.model_as_partial(recursive=True)
+
+    assert _field_is_required(SomethingListRecursivePartial,"items") is False
+    # Optional[List[...]]
+    sub_type = _get_subtype(SomethingListRecursivePartial,"items")
+    assert _field_is_required(sub_type,"name") is False
+    assert _field_is_required(sub_type,"age") is False
 
 
 @pytest.mark.skipif(PYDANTIC_V1, reason="pydantic v2 did change fields handling")
@@ -266,6 +366,89 @@ def test_partial_allows_explicit_recursive_v1():
     assert SomethingListPartial.__fields__["items"].type_.__fields__["age"].required is True
     SomethingListPartial(items=[])
     SomethingListPartial(items=[{"age": 1}])
+
+@pytest.mark.parametrize(
+    ("partial_fields",
+    "recursive",
+    "items_required",
+    "name_required",
+    "age_required",
+    "example_items"),
+[
+    pytest.param(
+        ("items.*",),
+        False,
+        True,
+        False,
+        False,
+        [[]],
+        id="items.*",
+    ),
+    pytest.param(
+        ("items",),
+        False,
+        False,
+        True,
+        True,
+        [[],None],
+        id="items",
+    ),
+    pytest.param(
+        ("items.name",),
+        False,
+        True,
+        False,
+        True,
+        [
+            [],
+            [{"age": 1}],
+        ],
+        id="items.name",
+    ),
+    pytest.param(
+        (),
+        True,
+        False,
+        False,
+        False,
+        [
+            [],
+            None,
+            [{}],
+        ],
+    id="recursive",
+    ),
+    pytest.param(
+        ("items.name",),
+        True,
+        True,
+        False,
+        True,
+        [
+            [],
+            [{"age": 1}],
+        ],
+        id="items.name - recursive",
+    ),
+
+],
+)
+def test_partial_allows_explicit_recursive(
+    partial_fields: Iterable[str],
+    recursive: bool,
+    items_required: bool,
+    name_required: bool,
+    age_required: bool,
+    example_items: Iterable[Union[None,list[Any]]],
+):
+    SomethingListPartial = SomethingList.model_as_partial(*partial_fields,recursive=recursive)
+
+    assert _field_is_required(SomethingListPartial,"items") is items_required
+    sub_type = _get_subtype(SomethingListPartial,"items")  # List[...]
+    assert _field_is_required(sub_type,"name") is name_required
+    assert _field_is_required(sub_type,"age") is age_required
+    for example in example_items:
+        SomethingListPartial(items=example)
 
 
 def test_no_change_to_optional_fields():
