@@ -36,12 +36,37 @@ SelfT = TypeVar("SelfT", bound=pydantic.BaseModel)
 ModelSelfT = TypeVar("ModelSelfT", bound="PartialModelMixin")
 
 
+class _PydanticPartialUndefined:
+    """A class to represent an undefined value for partial models."""
+
+    def __repr__(self) -> str:
+        return "PydanticPartialUndefined"
+
+    def __bool__(self) -> bool:
+        return False
+
+
+UNDEFINED = _PydanticPartialUndefined()
+
+
 @functools.lru_cache(maxsize=None, typed=True)
 def create_partial_model(
     base_cls: type[SelfT],
     *fields: str,
     recursive: bool = False,
+    use_undefined: Union[bool, Any] = False,
 ) -> type[SelfT]:
+    """Create a partial model from a base model class.
+
+    Args:
+        base_cls: The base model class to create a partial model from.
+        *fields: The fields to make optional.
+        recursive: If True - make all fields of sub-models partial as well.
+        use_undefined: If False (default) - make fields nullable with None as default value.
+            If True - use PydanticPartialUndefined as default value without making fields nullable.
+            If any other value - use that value as default value without making fields nullable.
+            It works because Pydantic does not validate default values with default settings.
+    """
     # Convert one type to being partial - if possible
     def _partial_annotation_arg(field_name_: str, field_annotation: type) -> type:
         if (
@@ -104,11 +129,22 @@ def create_partial_model(
         # Construct new field definition
         if field_name in fields_:
             if model_compat.is_model_field_info_required(field_info):
+                if use_undefined is False:
+                    default_value = None
+                    new_field_annotation = Optional[field_annotation]
+                else:
+                    if use_undefined is True:
+                        default_value = UNDEFINED
+                    else:
+                        default_value = use_undefined
+
+                    new_field_annotation = field_annotation
+
                 optional_fields[field_name] = (
-                    Optional[field_annotation],
+                    new_field_annotation,
                     model_compat.copy_model_field_info(
                         field_info,
-                        default=None,  # Set default to None
+                        default=default_value,  # Set default value
                         default_factory=None,  # Remove default_factory if set
                         **NULLABLE_KWARGS,  # For API usage: set field as nullable
                     ),
@@ -142,10 +178,11 @@ class PartialModelMixin(pydantic.BaseModel):
         cls: type[ModelSelfT],
         *fields: str,
         recursive: bool = False,
+        use_undefined: Union[bool, Any] = False,
     ) -> type[ModelSelfT]:
         return cast(
             type[ModelSelfT],
-            create_partial_model(cls, *fields, recursive=recursive),
+            create_partial_model(cls, *fields, recursive=recursive, use_undefined=use_undefined),
         )
 
     @classmethod

@@ -5,6 +5,7 @@ import pytest
 
 from pydantic_partial import PartialModelMixin
 from pydantic_partial._compat import PYDANTIC_V1, PYDANTIC_V2
+from pydantic_partial.partial import UNDEFINED
 
 if PYDANTIC_V2:
     from pydantic import ConfigDict
@@ -277,3 +278,41 @@ def test_no_change_to_optional_fields():
 def test_as_partial_works_as_expected():
     with pytest.warns(DeprecationWarning):
         assert Something.model_as_partial() is Something.as_partial()
+
+
+def test_nullable_partial_allows_nones_for_not_nullable_fields():
+    SomethingPartial = Something.model_as_partial(use_undefined=False)
+
+    model = SomethingPartial(name=None, age=42)
+    assert model.model_dump(exclude_unset=True) == {
+        "name": None,
+        "age": 42,
+    }
+
+
+def test_not_nullable_partial_allows_missed_fields():
+    SomethingPartial = Something.model_as_partial(use_undefined=True)
+
+    model = SomethingPartial(age=42, already_optional=None)
+    assert model.model_dump(exclude_unset=True) == {
+        "age": 42,
+        "already_optional": None,
+    }
+    assert model.name is UNDEFINED
+
+
+def test_not_nullable_partial_does_not_allows_nones_for_not_nullable_fields():
+    SomethingPartial = Something.model_as_partial(use_undefined=True)
+
+    with pytest.raises(pydantic.ValidationError):
+        SomethingPartial(name=None)
+
+
+def test_not_nullable_partial_with_custom_default():
+    SomethingPartial = Something.model_as_partial(use_undefined="custom_default")
+
+    model = SomethingPartial(age=42)
+    assert model.model_dump(exclude_unset=True) == {
+        "age": 42,
+    }
+    assert model.name == "custom_default"
