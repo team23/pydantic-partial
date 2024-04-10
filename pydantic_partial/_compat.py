@@ -15,7 +15,6 @@ if PYDANTIC_V1:  # pragma: no cover
     from pydantic.fields import ModelField  # type: ignore
 
     NULLABLE_KWARGS = {"nullable": True}
-    OPTIONAL_KWARGS = {"default": "<undefined>"}
 
     class PydanticCompat:  # type: ignore
         model_class: type[pydantic.BaseModel]
@@ -48,7 +47,6 @@ if PYDANTIC_V1:  # pragma: no cover
 
 elif PYDANTIC_V2:  # pragma: no cover
     NULLABLE_KWARGS = {"json_schema_extra": {"nullable": True}}
-    OPTIONAL_KWARGS = {"json_schema_extra": {"default": "<undefined>"}}
 
     class PydanticCompat:  # type: ignore
         model_class: type[pydantic.BaseModel]

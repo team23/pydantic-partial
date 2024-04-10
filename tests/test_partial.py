@@ -323,17 +323,14 @@ def test_not_nullable_partial_produces_correct_json_schema():
     assert SomethingPartial.model_json_schema() == {
         'properties': {
             'age': {
-                'default': '<undefined>',
                 'title': 'Age',
                 'type': 'integer'
             },
             'already_optional': {
-                'default': None,
                 'title': 'Already Optional',
                 'type': 'null'
             },
             'test_name': {
-                'default': '<undefined>',
                 'something_else': True,
                 'title': 'TEST Name',
                 'type': 'string'
