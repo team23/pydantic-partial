@@ -30,7 +30,7 @@ from typing import Any, Optional, TypeVar, Union, cast, get_args, get_origin
 
 import pydantic
 
-from ._compat import NULLABLE_KWARGS, PydanticCompat
+from ._compat import NULLABLE_KWARGS, OPTIONAL_KWARGS, PydanticCompat
 
 SelfT = TypeVar("SelfT", bound=pydantic.BaseModel)
 ModelSelfT = TypeVar("ModelSelfT", bound="PartialModelMixin")
@@ -132,6 +132,7 @@ def create_partial_model(
                 if use_undefined is False:
                     default_value = None
                     new_field_annotation = Optional[field_annotation]
+                    partial_kwargs = NULLABLE_KWARGS
                 else:
                     if use_undefined is True:
                         default_value = UNDEFINED
@@ -139,6 +140,7 @@ def create_partial_model(
                         default_value = use_undefined
 
                     new_field_annotation = field_annotation
+                    partial_kwargs = OPTIONAL_KWARGS
 
                 optional_fields[field_name] = (
                     new_field_annotation,
@@ -146,7 +148,7 @@ def create_partial_model(
                         field_info,
                         default=default_value,  # Set default value
                         default_factory=None,  # Remove default_factory if set
-                        **NULLABLE_KWARGS,  # For API usage: set field as nullable
+                        **partial_kwargs,  # For API usage: set field as nullable
                     ),
                 )
         elif recursive or sub_fields_requested:
