@@ -1,1 +1,2 @@
-from .partial import PartialModelMixin, create_partial_model
+from .partial import PartialModelMixin as PartialModelMixin
+from .partial import create_partial_model as create_partial_model
