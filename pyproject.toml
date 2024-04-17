@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pydantic-partial"
-version = "0.5.4"
+version = "0.5.5"
 description = "Create partial models from your pydantic models. Partial models may allow None for certain or all fields."
 authors = ["TEAM23 GmbH <info@team23.de>"]
 license = "MIT"
