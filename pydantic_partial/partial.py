@@ -41,6 +41,7 @@ def create_partial_model(
     base_cls: type[SelfT],
     *fields: str,
     recursive: bool = False,
+    optional: bool = True,
 ) -> type[SelfT]:
     # Convert one type to being partial - if possible
     def _partial_annotation_arg(field_name_: str, field_annotation: type) -> type:
@@ -104,8 +105,15 @@ def create_partial_model(
         # Construct new field definition
         if field_name in fields_:
             if model_compat.is_model_field_info_required(field_info):
+                # Allow to keep the types as they were and just add a
+                # default value
+                if optional:
+                    annotation = Optional[field_annotation]
+                else:
+                    annotation = field_annotation
+
                 optional_fields[field_name] = (
-                    Optional[field_annotation],
+                    annotation,
                     model_compat.copy_model_field_info(
                         field_info,
                         default=None,  # Set default to None
