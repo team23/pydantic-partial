@@ -5,7 +5,7 @@
 Just use `pip install pydantic-partial` to install the library.
 
 **Note:** `pydantic-partial` is compatible with `pydantic` versions `1.9`, `1.10` and even `2.x` (🥳) on
-Python `3.9`, `3.10`, `3.11` and `3.12`. This is also ensured running all tests on all those versions
+Python `3.9`, `3.10`, `3.11`, `3.12` and `3.13`. This is also ensured running all tests on all those versions
 using `tox`.
 
 ## About
