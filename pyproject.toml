@@ -13,7 +13,7 @@ pydantic = ">=1.9.0,<3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.1.2,<9.0.0"
-pytest-cov = ">=3,<6"
+pytest-cov = ">=3,<7"
 tox = ">=3.26,<5.0"
 ruff = ">=0.5.0,<0.8.0"
 pyright = ">=1.1.350,<1.2"
