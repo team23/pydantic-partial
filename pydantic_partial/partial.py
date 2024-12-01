@@ -110,7 +110,7 @@ def create_partial_model(
                         field_info,
                         default=None,  # Set default to None
                         default_factory=None,  # Remove default_factory if set
-                        **NULLABLE_KWARGS,  # For API usage: set field as nullable
+                        **NULLABLE_KWARGS,  # For API usage: set field as nullable and not required
                     ),
                 )
         elif recursive or sub_fields_requested:
