@@ -14,7 +14,7 @@ NULLABLE_KWARGS: dict[str, Any]
 if PYDANTIC_V1:  # pragma: no cover
     from pydantic.fields import ModelField  # type: ignore
 
-    NULLABLE_KWARGS = {"nullable": True}
+    NULLABLE_KWARGS = {"nullable": True, "required": False}
 
     class PydanticCompat:  # type: ignore
         model_class: type[pydantic.BaseModel]
@@ -46,7 +46,7 @@ if PYDANTIC_V1:  # pragma: no cover
             return copy_field_info(model_field.field_info, **kwargs)
 
 elif PYDANTIC_V2:  # pragma: no cover
-    NULLABLE_KWARGS = {"json_schema_extra": {"nullable": True}}
+    NULLABLE_KWARGS = {"json_schema_extra": {"nullable": True, "required": False}}
 
     class PydanticCompat:  # type: ignore
         model_class: type[pydantic.BaseModel]
@@ -65,7 +65,11 @@ elif PYDANTIC_V2:  # pragma: no cover
             return field_info.annotation
 
         def is_model_field_info_required(self, field_info: FieldInfo) -> bool:
-            return field_info.is_required()  # type: ignore
+            json_required = (
+                field_info.json_schema_extra is not None
+                and field_info.json_schema_extra.get("required", False)
+            )
+            return field_info.is_required() or json_required   # type: ignore
 
         def copy_model_field_info(self, field_info: FieldInfo, **kwargs: Any) -> FieldInfo:
             return copy_field_info(field_info, **kwargs)
