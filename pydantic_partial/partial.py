@@ -28,6 +28,11 @@ import functools
 import warnings
 from typing import Any, Optional, TypeVar, Union, cast, get_args, get_origin
 
+try:
+    from types import UnionType
+except ImportError:
+    UnionType = Union
+
 import pydantic
 
 from ._compat import NULLABLE_KWARGS, PydanticCompat
@@ -90,7 +95,7 @@ def create_partial_model(
         # Change type for sub models, if requested
         if recursive or sub_fields_requested:
             field_annotation_origin = get_origin(field_annotation)
-            if field_annotation_origin in (Union, list, tuple, tuple, list, dict, dict):
+            if field_annotation_origin in (Union, UnionType, tuple, list, set, dict):
                 field_annotation = field_annotation_origin[  # type: ignore
                     tuple(
                         _partial_annotation_arg(field_name, field_annotation_arg)
