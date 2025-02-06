@@ -61,3 +61,12 @@ def test_partial_model_will_be_the_same_on_mixin():
     SomethingWithMixinPartial2 = SomethingWithMixin.model_as_partial()
 
     assert SomethingWithMixinPartial1 is SomethingWithMixinPartial2
+
+
+def test_partial_class_name_can_be_overridden():
+    SomethingPartial = create_partial_model(Something, "name")
+    assert SomethingPartial.__name__ == "SomethingPartial"
+
+    partial_cls_name = "SomethingWithOptionalName"
+    SomethingWithOptionalName = create_partial_model(Something, "name", partial_cls_name=partial_cls_name)
+    assert SomethingWithOptionalName.__name__ == partial_cls_name
