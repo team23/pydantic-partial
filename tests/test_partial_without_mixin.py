@@ -1,6 +1,8 @@
+import json
 from typing import Union
 
 import pydantic
+import pytest
 
 from pydantic_partial import PartialModelMixin, create_partial_model
 from pydantic_partial._compat import PYDANTIC_V1, PYDANTIC_V2
@@ -25,7 +27,10 @@ class Something(pydantic.BaseModel):
     name: str
     age: int
     already_optional: None = None
-    already_required: int = pydantic.Field(default=1, json_schema_extra={"required": True})
+    if PYDANTIC_V1:
+        already_required: int = pydantic.Field(default=1, required=True)
+    if PYDANTIC_V2:
+        already_required: int = pydantic.Field(default=1, json_schema_extra={"required": True})
 
 
 class SomethingWithMixin(PartialModelMixin, pydantic.BaseModel):
@@ -67,8 +72,18 @@ def test_partial_model_will_be_the_same_on_mixin():
 
     assert SomethingWithMixinPartial1 is SomethingWithMixinPartial2
 
-def test_partial_model_will_override_json_required():
+@pytest.mark.skipif(PYDANTIC_V2, reason="Pydantic V2 does not support json_schema_extra")
+def test_pydantic_v1partial_model_will_override_json_required():
     SomethingPartial = create_partial_model(Something)
     assert _field_is_required(SomethingPartial, "already_required") is False
-    SomethingPartial.model_json_schema()["properties"]["already_required"]["nullable"] is True
-    SomethingPartial.model_json_schema()["properties"]["already_required"]["required"] is False
+    schema = json.loads(SomethingPartial.schema_json())
+    assert schema["properties"]["already_required"]["nullable"] is True
+    assert schema["properties"]["already_required"]["required"] is False
+
+@pytest.mark.skipif(PYDANTIC_V1, reason="Pydantic V1 does not support json_schema_extra")
+def test_pydantic_v2_partial_model_will_override_json_required():
+    SomethingPartial = create_partial_model(Something)
+    assert _field_is_required(SomethingPartial, "already_required") is False
+    schema = SomethingPartial.model_json_schema()
+    assert schema["properties"]["already_required"]["nullable"] is True
+    assert schema["properties"]["already_required"]["required"] is False
