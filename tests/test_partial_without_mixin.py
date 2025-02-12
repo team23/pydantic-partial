@@ -55,9 +55,18 @@ def test_partial_model_will_only_be_cached_with_same_params():
 
 
 def test_partial_model_will_be_the_same_on_mixin():
-    # Note: When we do not pass recursive=False the functools.lru_cache will
+    # Note: When we do not pass recursive=False and partial_cls_name=None the functools.lru_cache will
     #       actually create a separate model class, as the parameters differ.
-    SomethingWithMixinPartial1 = create_partial_model(SomethingWithMixin, recursive=False)
+    SomethingWithMixinPartial1 = create_partial_model(SomethingWithMixin, recursive=False, partial_cls_name=None)
     SomethingWithMixinPartial2 = SomethingWithMixin.model_as_partial()
 
     assert SomethingWithMixinPartial1 is SomethingWithMixinPartial2
+
+
+def test_partial_class_name_can_be_overridden():
+    SomethingPartial = create_partial_model(Something, "name")
+    assert SomethingPartial.__name__ == "SomethingPartial"
+
+    partial_cls_name = "SomethingWithOptionalName"
+    SomethingWithOptionalName = create_partial_model(Something, "name", partial_cls_name=partial_cls_name)
+    assert SomethingWithOptionalName.__name__ == partial_cls_name
