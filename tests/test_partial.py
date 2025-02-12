@@ -263,3 +263,12 @@ def test_no_change_to_optional_fields():
 def test_as_partial_works_as_expected():
     with pytest.warns(DeprecationWarning):
         assert Something.model_as_partial() is Something.as_partial()
+
+
+def test_partial_class_name_can_be_overridden():
+    SomethingPartial = Something.model_as_partial("name")
+    assert SomethingPartial.__name__ == "SomethingPartial"
+
+    partial_cls_name = "SomethingWithOptionalName"
+    SomethingWithOptionalName = Something.model_as_partial("name", partial_cls_name=partial_cls_name)
+    assert SomethingWithOptionalName.__name__ == partial_cls_name

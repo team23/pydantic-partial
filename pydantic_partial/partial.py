@@ -46,6 +46,7 @@ def create_partial_model(
     base_cls: type[SelfT],
     *fields: str,
     recursive: bool = False,
+    partial_cls_name: Optional[str] = None,
 ) -> type[SelfT]:
     # Convert one type to being partial - if possible
     def _partial_annotation_arg(field_name_: str, field_annotation: type) -> type:
@@ -128,9 +129,12 @@ def create_partial_model(
     if not optional_fields:
         return base_cls
 
+    if partial_cls_name is None:
+        partial_cls_name = f"{base_cls.__name__}Partial"
+
     # Generate new subclass model with those optional fields
     return pydantic.create_model(
-        f"{base_cls.__name__}Partial",
+        partial_cls_name,
         __base__=base_cls,
         **optional_fields,
     )
@@ -147,10 +151,11 @@ class PartialModelMixin(pydantic.BaseModel):
         cls: type[ModelSelfT],
         *fields: str,
         recursive: bool = False,
+        partial_cls_name: Optional[str] = None,
     ) -> type[ModelSelfT]:
         return cast(
             type[ModelSelfT],
-            create_partial_model(cls, *fields, recursive=recursive),
+            create_partial_model(cls, *fields, recursive=recursive, partial_cls_name=partial_cls_name),
         )
 
     @classmethod
@@ -158,10 +163,11 @@ class PartialModelMixin(pydantic.BaseModel):
         cls: type[ModelSelfT],
         *fields: str,
         recursive: bool = False,
+        partial_cls_name: Optional[str] = None,
     ) -> type[ModelSelfT]:
         warnings.warn(
             "as_partial(...) is deprecated, use model_as_partial(...) instead",
             DeprecationWarning,
             stacklevel=2,
         )
-        return cls.model_as_partial(*fields, recursive=recursive)
+        return cls.model_as_partial(*fields, recursive=recursive, partial_cls_name=partial_cls_name)
