@@ -5,32 +5,22 @@ import pydantic
 import pytest
 
 from pydantic_partial import PartialModelMixin, create_partial_model
-from pydantic_partial._compat import PYDANTIC_V1, PYDANTIC_V2
 
-if PYDANTIC_V1:
-    def _field_is_required(model: Union[type[pydantic.BaseModel], pydantic.BaseModel], field_name: str) -> bool:
-        """Check if a field is required on a pydantic V1 model."""
-        return model.__fields__[field_name].required
-elif PYDANTIC_V2:
-    def _field_is_required(model: Union[type[pydantic.BaseModel], pydantic.BaseModel], field_name: str) -> bool:
-        """Check if a field is required on a pydantic V2 model."""
-        json_required = (
-            model.model_fields[field_name].json_schema_extra is not None
-            and model.model_fields[field_name].json_schema_extra.get("required", False)
-        )
-        return model.model_fields[field_name].is_required() or json_required
-else:
-    raise DeprecationWarning("Pydantic has to be in version 1 or 2.")
+
+def _field_is_required(model: Union[type[pydantic.BaseModel], pydantic.BaseModel], field_name: str) -> bool:
+    """Check if a field is required on a pydantic V2 model."""
+    json_required = (
+        model.model_fields[field_name].json_schema_extra is not None
+        and model.model_fields[field_name].json_schema_extra.get("required", False)
+    )
+    return model.model_fields[field_name].is_required() or json_required
 
 
 class Something(pydantic.BaseModel):
     name: str
     age: int
     already_optional: None = None
-    if PYDANTIC_V1:
-        already_required: int = pydantic.Field(default=1, required=True)
-    if PYDANTIC_V2:
-        already_required: int = pydantic.Field(default=1, json_schema_extra={"required": True})
+    already_required: int = pydantic.Field(default=1, json_schema_extra={"required": True})
 
 
 class SomethingWithMixin(PartialModelMixin, pydantic.BaseModel):
@@ -72,15 +62,6 @@ def test_partial_model_will_be_the_same_on_mixin():
 
     assert SomethingWithMixinPartial1 is SomethingWithMixinPartial2
 
-@pytest.mark.skipif(PYDANTIC_V2, reason="Pydantic V2 does not support json_schema_extra")
-def test_pydantic_v1partial_model_will_override_json_required():
-    SomethingPartial = create_partial_model(Something)
-    assert _field_is_required(SomethingPartial, "already_required") is False
-    schema = json.loads(SomethingPartial.schema_json())
-    assert schema["properties"]["already_required"]["nullable"] is True
-    assert schema["properties"]["already_required"]["required"] is False
-
-@pytest.mark.skipif(PYDANTIC_V1, reason="Pydantic V1 does not support json_schema_extra")
 def test_pydantic_v2_partial_model_will_override_json_required():
     SomethingPartial = create_partial_model(Something)
     assert _field_is_required(SomethingPartial, "already_required") is False

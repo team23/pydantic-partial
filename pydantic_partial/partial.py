@@ -28,6 +28,8 @@ import functools
 import warnings
 from typing import Any, Optional, TypeVar, Union, cast, get_args, get_origin
 
+from pydantic_partial.utils import copy_field_info
+
 try:
     from types import UnionType
 except ImportError:
@@ -35,7 +37,7 @@ except ImportError:
 
 import pydantic
 
-from ._compat import NULLABLE_KWARGS, PydanticCompat
+NULLABLE_KWARGS = {"json_schema_extra": {"nullable": True, "required": False}}
 
 SelfT = TypeVar("SelfT", bound=pydantic.BaseModel)
 ModelSelfT = TypeVar("ModelSelfT", bound="PartialModelMixin")
@@ -67,18 +69,16 @@ def create_partial_model(
         else:
             return field_annotation
 
-    model_compat = PydanticCompat(base_cls)
-
     # By default make all fields optional, but use passed fields when possible
     if fields:
         fields_ = list(fields)
     else:
-        fields_ = list(model_compat.model_fields.keys())
+        fields_ = list(base_cls.model_fields.keys())
 
     # Construct list of optional new field overrides
     optional_fields: dict[str, Any] = {}
-    for field_name, field_info in model_compat.model_fields.items():
-        field_annotation = model_compat.get_model_field_info_annotation(field_info)
+    for field_name, field_info in base_cls.model_fields.items():
+        field_annotation = field_info.annotation
         if field_annotation is None:  # pragma: no cover
             continue  # This is just to handle edge cases for pydantic 1.x - can be removed in pydantic 2.0
 
@@ -98,7 +98,7 @@ def create_partial_model(
             field_annotation_origin = get_origin(field_annotation)
             if field_annotation_origin in (Union, UnionType, tuple, list, set, dict):
                 field_annotation = field_annotation_origin[  # type: ignore
-                    tuple(
+                    tuple(  # type: ignore
                         _partial_annotation_arg(field_name, field_annotation_arg)
                         for field_annotation_arg
                         in get_args(field_annotation)
@@ -109,10 +109,17 @@ def create_partial_model(
 
         # Construct new field definition
         if field_name in fields_:
-            if model_compat.is_model_field_info_required(field_info):
+            if (  # if field is required, create Optional annotation
+                field_info.is_required()
+                or (
+                    field_info.json_schema_extra is not None
+                    and isinstance(field_info.json_schema_extra, dict)
+                    and field_info.json_schema_extra.get("required", False)
+                )
+            ):
                 optional_fields[field_name] = (
                     Optional[field_annotation],
-                    model_compat.copy_model_field_info(
+                    copy_field_info(
                         field_info,
                         default=None,  # Set default to None
                         default_factory=None,  # Remove default_factory if set
@@ -122,7 +129,7 @@ def create_partial_model(
         elif recursive or sub_fields_requested:
             optional_fields[field_name] = (
                 field_annotation,
-                model_compat.copy_model_field_info(field_info),
+                copy_field_info(field_info),
             )
 
     # Return original model class if nothing has changed
