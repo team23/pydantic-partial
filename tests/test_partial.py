@@ -3,103 +3,55 @@ from typing import Any, Union, get_args
 
 import pydantic
 import pytest
+from pydantic import ConfigDict
 
 from pydantic_partial import PartialModelMixin
-from pydantic_partial._compat import PYDANTIC_V1, PYDANTIC_V2
 
-if PYDANTIC_V2:
-    from pydantic import ConfigDict
 
-if PYDANTIC_V1:
-    def _field_is_required(
-        model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
-        field_name: str,
-    ) -> bool:
-        """Check if a field is required on a pydantic V1 model."""
-        return model.__fields__[field_name].required
+def _field_is_required(
+    model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
+    field_name: str,
+) -> bool:
+    """Check if a field is required on a pydantic V2 model."""
+    return model.model_fields[field_name].is_required()
 
-    def _get_subtype(
-        model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
-        field_name: str,
-    ) -> pydantic.BaseModel:
-        return model.__fields__[field_name].type_
+def _get_subtype(
+    model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
+    field_name: str,
+) -> pydantic.BaseModel:
+    try:
+        return get_args(get_args(model.model_fields[field_name].annotation)[0])[0]
+    except IndexError:
+        return get_args(model.model_fields[field_name].annotation)[0]
 
-    def _get_alias(
-        model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
-        field_name: str,
-    ) -> str:
-        return model.__fields__[field_name].field_info.alias
+def _get_alias(
+    model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
+    field_name: str,
+) -> str:
+    return model.model_fields[field_name].alias
 
-    def _get_title(
-        model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
-        field_name: str,
-    ) -> str:
-        return model.__fields__[field_name].field_info.title
+def _get_title(
+    model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
+    field_name: str,
+) -> str:
+    return model.model_fields[field_name].title
 
-    def _get_extra(
-        model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
-        field_name: str,
-    ) -> dict[str, Any]:
-        return model.__fields__[field_name].field_info.extra
-
-elif PYDANTIC_V2:
-    def _field_is_required(
-        model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
-        field_name: str,
-    ) -> bool:
-        """Check if a field is required on a pydantic V2 model."""
-        return model.model_fields[field_name].is_required()
-
-    def _get_subtype(
-        model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
-        field_name: str,
-    ) -> pydantic.BaseModel:
-        try:
-            return get_args(get_args(model.model_fields[field_name].annotation)[0])[0]
-        except IndexError:
-            return get_args(model.model_fields[field_name].annotation)[0]
-
-    def _get_alias(
-        model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
-        field_name: str,
-    ) -> str:
-        return model.model_fields[field_name].alias
-
-    def _get_title(
-        model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
-        field_name: str,
-    ) -> str:
-        return model.model_fields[field_name].title
-
-    def _get_extra(
-        model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
-        field_name: str,
-    ) -> dict[str, Any]:
-        return model.model_fields[field_name].json_schema_extra
-
-else:
-    raise DeprecationWarning("Pydantic has to be in version 1 or 2.")
+def _get_extra(
+    model: Union[type[pydantic.BaseModel], pydantic.BaseModel],
+    field_name: str,
+) -> dict[str, Any]:
+    return model.model_fields[field_name].json_schema_extra
 
 
 class Something(PartialModelMixin, pydantic.BaseModel):
-    if PYDANTIC_V2:
-        name: str = pydantic.Field(
-            ..., alias="test_name", title="TEST Name",
-            json_schema_extra={"something_else": True},
-        )
-    if PYDANTIC_V1:
-        name: str = pydantic.Field(
-            ..., alias="test_name", title="TEST Name",
-            something_else=True,
-        )  # type: ignore
+    name: str = pydantic.Field(
+        ..., alias="test_name", title="TEST Name",
+        json_schema_extra={"something_else": True},
+    )
     age: int
     already_optional: None = None
 
-    if PYDANTIC_V2:
-        model_config = ConfigDict(populate_by_name=True)
-    if PYDANTIC_V1:
-        class Config:
-            allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class SomethingList(PartialModelMixin, pydantic.BaseModel):
