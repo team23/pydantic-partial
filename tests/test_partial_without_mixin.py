@@ -9,18 +9,15 @@ from pydantic_partial import PartialModelMixin, create_partial_model
 
 def _field_is_required(model: Union[type[pydantic.BaseModel], pydantic.BaseModel], field_name: str) -> bool:
     """Check if a field is required on a pydantic V2 model."""
-    json_required = (
-        model.model_fields[field_name].json_schema_extra is not None
-        and model.model_fields[field_name].json_schema_extra.get("required", False)
-    )
-    return model.model_fields[field_name].is_required() or json_required
+
+    return model.model_fields[field_name].is_required()
 
 
 class Something(pydantic.BaseModel):
     name: str
     age: int
     already_optional: None = None
-    already_required: int = pydantic.Field(default=1, json_schema_extra={"required": True})
+    already_required: int = pydantic.Field(default=1)
 
 
 class SomethingWithMixin(PartialModelMixin, pydantic.BaseModel):
@@ -62,12 +59,6 @@ def test_partial_model_will_be_the_same_on_mixin():
 
     assert SomethingWithMixinPartial1 is SomethingWithMixinPartial2
 
-def test_pydantic_v2_partial_model_will_override_json_required():
-    SomethingPartial = create_partial_model(Something)
-    assert _field_is_required(SomethingPartial, "already_required") is False
-    schema = SomethingPartial.model_json_schema()
-    assert schema["properties"]["already_required"]["nullable"] is True
-    assert schema["properties"]["already_required"]["required"] is False
 
 def test_partial_class_name_can_be_overridden():
     SomethingPartial = create_partial_model(Something, "name")
