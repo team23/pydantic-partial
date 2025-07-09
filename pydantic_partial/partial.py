@@ -37,8 +37,6 @@ except ImportError:
 
 import pydantic
 
-NULLABLE_KWARGS = {"json_schema_extra": {"nullable": True, "required": False}}
-
 SelfT = TypeVar("SelfT", bound=pydantic.BaseModel)
 ModelSelfT = TypeVar("ModelSelfT", bound="PartialModelMixin")
 
@@ -123,7 +121,6 @@ def create_partial_model(
                         field_info,
                         default=None,  # Set default to None
                         default_factory=None,  # Remove default_factory if set
-                        **NULLABLE_KWARGS,  # For API usage: set field as nullable and not required
                     ),
                 )
         elif recursive or sub_fields_requested:
