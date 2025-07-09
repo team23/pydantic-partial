@@ -95,6 +95,8 @@ def create_partial_model(
         if recursive or sub_fields_requested:
             field_annotation_origin = get_origin(field_annotation)
             if field_annotation_origin in (Union, UnionType, tuple, list, set, dict):
+                if field_annotation_origin is UnionType:
+                    field_annotation_origin = Union
                 field_annotation = field_annotation_origin[  # type: ignore
                     tuple(  # type: ignore
                         _partial_annotation_arg(field_name, field_annotation_arg)

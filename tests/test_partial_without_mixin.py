@@ -1,4 +1,4 @@
-import json
+import sys
 from typing import Union
 
 import pydantic
@@ -22,6 +22,13 @@ class Something(pydantic.BaseModel):
 
 class SomethingWithMixin(PartialModelMixin, pydantic.BaseModel):
     name: str
+
+
+class SomethingWithUnionTypes(PartialModelMixin, pydantic.BaseModel):
+    name_as_union: Union[str, int]
+
+    if sys.version_info >= (3, 10):
+        name_as_uniontype: str | int
 
 
 def test_setup_is_sane():
@@ -67,3 +74,7 @@ def test_partial_class_name_can_be_overridden():
     partial_cls_name = "SomethingWithOptionalName"
     SomethingWithOptionalName = create_partial_model(Something, "name", partial_cls_name=partial_cls_name)
     assert SomethingWithOptionalName.__name__ == partial_cls_name
+
+
+def test_recursive_on_unions_work():  # see https://github.com/team23/pydantic-partial/issues/52
+    create_partial_model(SomethingWithUnionTypes, recursive=True)
