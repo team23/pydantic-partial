@@ -47,6 +47,7 @@ def create_partial_model(
     *fields: str,
     recursive: bool = False,
     partial_cls_name: Optional[str] = None,
+    struct_processing: bool = False
 ) -> type[SelfT]:
     # Convert one type to being partial - if possible
     def _partial_annotation_arg(field_name_: str, field_annotation: type) -> type:
@@ -63,7 +64,7 @@ def create_partial_model(
             ]
             if children_fields == ["*"]:
                 children_fields = []
-            return field_annotation.model_as_partial(*children_fields, recursive=recursive)
+            return field_annotation.model_as_partial(*children_fields, recursive=recursive, struct_processing=struct_processing)
         else:
             return field_annotation
 
@@ -99,13 +100,13 @@ def create_partial_model(
                     field_annotation_origin = Union
                 field_annotation = field_annotation_origin[  # type: ignore
                     tuple(  # type: ignore
-                        _partial_annotation_arg(field_name, field_annotation_arg)
+                        _partial_annotation_arg(field_name, field_annotation_arg )
                         for field_annotation_arg
                         in get_args(field_annotation)
                     )
                 ]
             else:
-                field_annotation = _partial_annotation_arg(field_name, field_annotation)
+                field_annotation = _partial_annotation_arg(field_name, field_annotation )
 
         # Construct new field definition
         if field_name in fields_:
@@ -115,6 +116,10 @@ def create_partial_model(
                     field_info.json_schema_extra is not None
                     and isinstance(field_info.json_schema_extra, dict)
                     and field_info.json_schema_extra.get("required", False)
+                )
+                or ( # for structures (Union etc.) with None processing
+                    struct_processing
+                    and field_annotation_origin in (Union, UnionType, tuple, list, set, dict)
                 )
             ):
                 optional_fields[field_name] = (
@@ -158,6 +163,7 @@ class PartialModelMixin(pydantic.BaseModel):
         *fields: str,
         recursive: bool = False,
         partial_cls_name: Optional[str] = None,
+        struct_processing: bool = False
     ) -> type[ModelSelfT]:
         return cast(
             type[ModelSelfT],
@@ -170,10 +176,11 @@ class PartialModelMixin(pydantic.BaseModel):
         *fields: str,
         recursive: bool = False,
         partial_cls_name: Optional[str] = None,
+        struct_processing: bool = False
     ) -> type[ModelSelfT]:
         warnings.warn(
             "as_partial(...) is deprecated, use model_as_partial(...) instead",
             DeprecationWarning,
             stacklevel=2,
         )
-        return cls.model_as_partial(*fields, recursive=recursive, partial_cls_name=partial_cls_name)
+        return cls.model_as_partial(*fields, recursive=recursive, partial_cls_name=partial_cls_name, struct_processing=struct_processing)
