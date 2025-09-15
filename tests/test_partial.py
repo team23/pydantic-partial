@@ -213,7 +213,7 @@ def test_no_change_to_optional_fields():
 
 
 def test_as_partial_works_as_expected():
-    with pytest.warns(DeprecationWarning):
+    with pytest.warns(DeprecationWarning, match=".*is deprecated.*"):
         assert Something.model_as_partial() is Something.as_partial()
 
 
